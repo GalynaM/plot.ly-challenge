@@ -17,101 +17,229 @@ function populateDropDown(items){
     });
 }
 
-function isSubjectSample(sample, subject){
-    return sample.id == subject
-}
+// function isSubjectSample(sample, subject){
+//     return sample.id == subject
+// }
 
 d3.json("/plot.ly-challenge/samples.json").then(function(load){
-    // samples = [data['metadata'], data["names"], data["samples"]]
-    data = load;
+    
+  data = load;
     console.log(data);
 
     subjects = data.names;
     samples = data.samples;
 
-    // convert samples array of objects into array
-    // samples = samples1.forEach(index => {
-    //     samples1[index]
-    // })
-
     // console.log(subjects)
-    console.log(samples)
+    // console.log(samples)
 
     // populate drop down menu with participants IDs
     // console.log(`Before dropdown ${populateDropDown}`)
     populateDropDown(subjects);
 
-    // let otu_ids = data.filter(function(val){
-    //     return val.samples.id == subjects[0];
-    // })
+    // Split big function getSubjectSample into small ones
+    // This one should draw bar chart
+    function drawBarChart(subject){
+        
+      x_values = getSubjectSample(subject).sample_values.slice(0,10).reverse();
+      // console.log(x_values)
 
-    // check how i can access values inside samples
-    // let check = data.samples[0].otu_ids
+      y_values = getSubjectSample(subject).otu_ids.slice(0,10).reverse();
+      // console.log(y_values)
 
-    // let check = samples.filter(sample=>sample.id == "940")
-    // console.log(check);
+      let otu_idsLbl = []
 
+      for (i=0;i<y_values.length;i++){
+          otu_idsLbl.push("OTU " + y_values[i])
+      }
+      // console.log(otu_idsLbl)
 
-    function getSubjectSample(subject){
+      labels = getSubjectSample(subject).otu_labels.slice(0,10).reverse();
+      // console.log(labels)
+        // plot chart
+      let trace1 = {
+        x: x_values,
+        y: otu_idsLbl,
+        text: labels,
+        name: subject,
+        type: "bar",
+        orientation: "h"
+      };
 
-            sample_values = samples.filter(sample=>sample.id==subject)
-                            .map(sample=>sample.sample_values)[0]
-                            .slice(0,10)
-                            .reverse();
+      let traceData = [trace1];
 
-            otu_ids = samples.filter(sample=>sample.id==subject)
-                            .map(sample=>sample.otu_ids)[0]
-                            .slice(0,10)
-                            .reverse();
+      let layout = {
+        title: `Result for subject ${subject}`,
+        margin: {
+          l: 100,
+          r: 100,
+          t: 100,
+          b: 100
+        }
+      };
 
-            let otu_idsLbl = []
-
-            for (i=0;i<otu_ids.length;i++){
-                otu_idsLbl.push("OTU " + otu_ids[i])
-            }
-
-            console.log(otu_idsLbl)
-
-            otu_labels = samples.filter(sample=>sample.id==subject)
-                                .map(sample=>sample.otu_labels)[0]
-                                .slice(0,10)
-                                .reverse();
-
-            // top10values = sample_values[0].filter((value, index)=>index<10)
-            // top10ids = otu_ids[0].filter((value, index)=>index<10)
-            // top10labels = otu_labels[0].filter((value, index)=>index<10)
-
-            console.log(`from function getSubjSample`)
-            console.log(sample_values)
-            console.log(otu_idsLbl)
-
-            // plot chart
-            let trace1 = {
-                x: sample_values,
-                y: otu_idsLbl,
-                text: otu_labels,
-                name: subject,
-                type: "bar",
-                orientation: "h"
-              };
-
-              let traceData = [trace1];
-
-              let layout = {
-                title: `Result for subject ${subject}`,
-                margin: {
-                  l: 100,
-                  r: 100,
-                  t: 100,
-                  b: 100
-                }
-              };
-
-              Plotly.newPlot("bar", traceData, layout);
+      Plotly.newPlot("bar", traceData, layout);
 
     }
 
-    getSubjectSample(subjects[0])
+    // Function to draw Bubble Chart
+    function drawBubbleChart(subject){
+
+      x_values = getSubjectSample(subject).otu_ids;
+      // console.log(x_values)
+
+      y_values = getSubjectSample(subject).sample_values;
+      // console.log(y_values)
+
+      // marker_size = y_values
+
+      text_values = getSubjectSample(subject).otu_labels
+      // console.log(text_values)
+
+      // Draw Plot
+      let trace1 = {
+        x: x_values,
+        y: y_values,
+        text: text_values,
+        mode: 'markers',
+        // name: subject,
+        marker: {
+          size: y_values,
+          color: x_values,       
+        },
+        type: 'scatter' 
+      };
+
+      let traceData = [trace1];
+
+      let layout = {
+        title: `Bubble Chart with all samples for individual ${subject}`,
+        xaxis: {
+          title: {
+            text: "OTU ID"
+          }
+        }
+        // showlegend: false,
+        // height: 600,
+        // width: 1200
+      };
+
+      Plotly.newPlot('bubble', traceData, layout);
+
+    }
+
+    // Now this function should return all needed parameters for future charts
+    function getSubjectSample(subject){
+
+      let subjectSample = {}
+
+      sample_values = samples.filter(sample=>sample.id==subject)
+                      .map(sample=>sample.sample_values)[0];
+      // console.log(sample_values)
+
+      otu_ids = samples.filter(sample=>sample.id==subject)
+                      .map(sample=>sample.otu_ids)[0];
+      // console.log(otu_ids)
+
+      otu_labels = samples.filter(sample=>sample.id==subject)
+                          .map(sample=>sample.otu_labels)[0];
+      // console.log(otu_labels)
+
+      subjectSample = {
+        "sample_values": sample_values,
+        "otu_ids": otu_ids,
+        "otu_labels": otu_labels
+      }
+
+      return subjectSample;
+
+      // sample_values = samples.filter(sample=>sample.id==subject)
+      //                 .map(sample=>sample.sample_values)[0]
+      //                 .slice(0,10)
+      //                 .reverse();
+
+      // otu_ids = samples.filter(sample=>sample.id==subject)
+      //                 .map(sample=>sample.otu_ids)[0]
+      //                 .slice(0,10)
+      //                 .reverse();
+
+      // otu_labels = samples.filter(sample=>sample.id==subject)
+      //                     .map(sample=>sample.otu_labels)[0]
+      //                     .slice(0,10)
+      //                     .reverse();
+
+    }
+
+
+    drawBarChart(subjects[0])
+
+    drawBubbleChart(subjects[0])
+
+
+
+
+
+
+
+
+
+
+    // Function that loads sample data based on the subject selected
+    // function getSubjectSample(subject){
+
+    //   sample_values = samples.filter(sample=>sample.id==subject)
+    //                   .map(sample=>sample.sample_values)[0]
+    //                   .slice(0,10)
+    //                   .reverse();
+
+    //   otu_ids = samples.filter(sample=>sample.id==subject)
+    //                   .map(sample=>sample.otu_ids)[0]
+    //                   .slice(0,10)
+    //                   .reverse();
+
+    //   let otu_idsLbl = []
+
+    //   for (i=0;i<otu_ids.length;i++){
+    //       otu_idsLbl.push("OTU " + otu_ids[i])
+    //   }
+
+    //   console.log(otu_idsLbl)
+
+    //   otu_labels = samples.filter(sample=>sample.id==subject)
+    //                       .map(sample=>sample.otu_labels)[0]
+    //                       .slice(0,10)
+    //                       .reverse();
+
+    //   console.log(`from function getSubjSample`)
+    //   console.log(sample_values)
+    //   console.log(otu_idsLbl)
+
+    //   // plot chart
+    //   let trace1 = {
+    //       x: sample_values,
+    //       y: otu_idsLbl,
+    //       text: otu_labels,
+    //       name: subject,
+    //       type: "bar",
+    //       orientation: "h"
+    //   };
+
+    //   let traceData = [trace1];
+
+    //   let layout = {
+    //     title: `Result for subject ${subject}`,
+    //     margin: {
+    //       l: 100,
+    //       r: 100,
+    //       t: 100,
+    //       b: 100
+    //     }
+    //   };
+
+    //   Plotly.newPlot("bar", traceData, layout);
+
+    // }
+
+    // getSubjectSample(subjects[0])
 
 });
 
@@ -130,12 +258,12 @@ console.log("Am i first?")
 
 
 //////////////
-d3.selectAll("li").on("click", function() {
-    // you can select the element just like any other selection
-    var listItem = d3.select(this);
-    listItem.style("color", "blue");
+// d3.selectAll("li").on("click", function() {
+//     // you can select the element just like any other selection
+//     var listItem = d3.select(this);
+//     listItem.style("color", "blue");
   
-    var listItemText = listItem.text();
-    console.log(listItemText);
-  });
+//     var listItemText = listItem.text();
+//     console.log(listItemText);
+//   });
   
