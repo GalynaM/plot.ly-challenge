@@ -21,7 +21,7 @@ function isSubjectSample(sample, subject){
     return sample.id == subject
 }
 
-d3.json("/plot.ly-challenge/StarterCode/samples.json").then(function(load){
+d3.json("/plot.ly-challenge/samples.json").then(function(load){
     // samples = [data['metadata'], data["names"], data["samples"]]
     data = load;
     console.log(data);
