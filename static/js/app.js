@@ -20,11 +20,21 @@ function getData(data){
       option.text(name)
   });
   
-  // Draw Samples for selected Subject
+  // Show Defaults - Plots and Info
   drawSubjectSamples(names[0], data.samples);
-
-  // Show Metadata for selected Subject
   showSubjectMetadata(names[0], data.metadata);
+
+  // Draw Plots and show Metadata depending on the drop box selection
+  d3.select("#selDataset").on("change", optionChanged);
+
+  function optionChanged(){
+    subject = dropdMenu.property("value");
+    console.log(`subject now is: ${subject}`);
+
+    drawSubjectSamples(subject, data.samples);
+    showSubjectMetadata(subject, data.metadata);
+  }
+
 }
 
 // Function that Draws Bar and Bubble Chart for Samples of the subject
@@ -124,11 +134,10 @@ function drawBubbleChart(subject, x, y, text){
 
 function showSubjectMetadata(subject, metadata){
   let metaBox = d3.select("#sample-metadata");
-  subj_metadata = metadata.filter(mtd=>mtd.id==subject)[0]
-  // .map(sample=>sample.sample_values)[0];
-  console.log(subj_metadata)
-  console.log(Object.keys(subj_metadata))
-  console.log(Object.values(subj_metadata))
+
+  metaBox.selectAll("p").remove();
+
+  subj_metadata = metadata.filter(mtd=>mtd.id==subject)[0];
 
   Object.entries(subj_metadata).forEach(([key, value]) => {
       meta_paragraph = metaBox.append("p")
