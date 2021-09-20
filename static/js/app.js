@@ -126,14 +126,15 @@ function showSubjectMetadata(subject, metadata){
   let metaBox = d3.select("#sample-metadata");
   subj_metadata = metadata.filter(mtd=>mtd.id==subject)[0]
   // .map(sample=>sample.sample_values)[0];
+  console.log(subj_metadata)
   console.log(Object.keys(subj_metadata))
   console.log(Object.values(subj_metadata))
 
-  // names.forEach(name => {
-  //     option = dropdMenu.append("option")
-  //     option.property("value",name)
-  //     option.text(name)
-  // })
+  Object.entries(subj_metadata).forEach(([key, value]) => {
+      meta_paragraph = metaBox.append("p")
+      // meta_paragraph.property("value",s_m)
+      meta_paragraph.text(key+": "+value)
+  })
 };
 
 console.log("Am i first?")
