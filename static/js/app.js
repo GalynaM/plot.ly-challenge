@@ -1,11 +1,11 @@
-
 // Fetch the JSON data and console log it
 // Load Data from JSON via D3
 d3.json("/plot.ly-challenge/samples.json").then(function(data){   
     getData(data);
 });
 
-// Populate drop down with subject names, draw Bar and Bubble, show Metadata
+// Function getData populates drop down with subject names,
+// draws Bar and Bubble charts, shows Metadata and Gauge chart
 // depending on the subject selected
 function getData(data){
 
@@ -23,21 +23,24 @@ function getData(data){
   // Show Defaults - Plots and Info
   drawSubjectSamples(names[0], data.samples);
   showSubjectMetadata(names[0], data.metadata);
+  drawGaugeChart(names[0], data.metadata);
 
-  // Draw Plots and show Metadata depending on the drop box selection
+  // Specify on change option for dropdown
   d3.select("#selDataset").on("change", optionChanged);
 
+  // Draw Plots and show Metadata depending on the drop box selection
   function optionChanged(){
     subject = dropdMenu.property("value");
     console.log(`subject now is: ${subject}`);
 
     drawSubjectSamples(subject, data.samples);
     showSubjectMetadata(subject, data.metadata);
+    drawGaugeChart(subject, data.metadata);
   }
 
 }
 
-// Function that Draws Bar and Bubble Chart for Samples of the subject
+// Function that defines data to draw Bar and Bubble Chart
 function drawSubjectSamples(subject, samples){
 
   sample_values = samples.filter(sample=>sample.id==subject)
@@ -54,8 +57,6 @@ function drawSubjectSamples(subject, samples){
 
   y_valBub = sample_values;
 
-  // marker_size = y_values
-
   text_valBub = otu_labels
 
   // Define values for bar chart
@@ -69,11 +70,12 @@ function drawSubjectSamples(subject, samples){
 
   labels_Bar = otu_labels.slice(0,10).reverse();
 
+  // Call draw chart functions with specified data
   drawBarChart(subject, x_valBar, otu_idsLbl, labels_Bar);
   drawBubbleChart(subject, x_valBub, y_valBub, text_valBub);
 }
 
-// Function that draws Bar Chart
+// Function to draw Bar Chart
 function drawBarChart(subject, x, y, text){
 
   let trace1 = {
@@ -82,13 +84,17 @@ function drawBarChart(subject, x, y, text){
     text: text,
     name: subject,
     type: "bar",
-    orientation: "h"
+    orientation: "h",
+    marker:{
+      color: '#0508b8',
+    },
+    opacity: 0.6
   };
 
   let traceData = [trace1];
 
   let layout = {
-    title: `Result for subject ${subject}`,
+    title: `The ${subject} individual`,
     margin: {
       l: 100,
       r: 100,
@@ -99,19 +105,18 @@ function drawBarChart(subject, x, y, text){
   Plotly.newPlot("bar", traceData, layout);
 }
 
-     // Function to draw Bubble Chart
+// Function to draw Bubble Chart
 function drawBubbleChart(subject, x, y, text){
 
-  // Draw Plot
   let trace1 = {
     x: x,
     y: y,
     text: text,
     mode: 'markers',
-    // name: subject,
+    colors: "rgb(110, 173, 138)",
     marker: {
       size: y,
-      color: x,       
+      color: x,  
     },
     type: 'scatter' 
   };
@@ -119,19 +124,16 @@ function drawBubbleChart(subject, x, y, text){
   let traceData = [trace1];
 
   let layout = {
-    title: `Bubble Chart with all samples for individual ${subject}`,
     xaxis: {
       title: {
         text: "OTU ID"
       }
     }
-    // showlegend: false,
-    // height: 600,
-    // width: 1200
   };
   Plotly.newPlot('bubble', traceData, layout);
 }
 
+// Function to show Metadata
 function showSubjectMetadata(subject, metadata){
   let metaBox = d3.select("#sample-metadata");
 
@@ -141,21 +143,45 @@ function showSubjectMetadata(subject, metadata){
 
   Object.entries(subj_metadata).forEach(([key, value]) => {
       meta_paragraph = metaBox.append("p")
-      // meta_paragraph.property("value",s_m)
       meta_paragraph.text(key+": "+value)
   })
 };
 
-console.log("Am i first?")
+// Function to draw Gauge Chart
+function drawGaugeChart(subject, metadata){
+ 
+  // Get the washing frequence from metadata for subject
+  wfreq = metadata.filter(mtd=>mtd.id==subject)[0]["wfreq"];
 
+  console.log(`wfreq: ${wfreq}`)
 
-//////////////
-// d3.selectAll("li").on("click", function() {
-//     // you can select the element just like any other selection
-//     var listItem = d3.select(this);
-//     listItem.style("color", "blue");
-  
-//     var listItemText = listItem.text();
-//     console.log(listItemText);
-//   });
-  
+  var data = [
+    {
+      domain: { x: [0, 1], y: [0, 1]},
+      type: "indicator",
+      value: wfreq,
+      title: {text: 'Scrubs per Week'},
+      mode: "gauge+number",
+      gauge: {
+        axis: {
+          range: [0, 9],
+          dtick: 1,
+          tickmode: "array",
+          tickvals: [0.5,1.5,2.5,3.5,4.5,5.5,6.5,7.5,8.5],  
+          ticktext: ['0-1', '1-2', '2-3', '3-4', '4-5', '5-6', '6-7', '7-8', '8-9'],
+        },
+        steps: [
+          {range: [0, 1], 'color': 'rgb(247,252,240)'},
+          {range: [1, 2], 'color': 'rgb(224,243,219)'},
+          {range: [2, 3], 'color': 'rgb(204,235,197)'},
+          {range: [3, 4], 'color':  'rgb(168,221,181)'},
+          {range: [4, 5], 'color':  'rgb(123,204,196)'},
+          {range: [5, 6], 'color':  'rgb(78,179,211)'},
+          {range: [6, 7], 'color': 'rgb(43,140,190)'},
+          {range: [7, 8], 'color':  'rgb(8,104,172)'},
+          {range: [8, 9], 'color':   'rgb(8,64,129)'}],
+    },
+    }
+  ];
+  Plotly.newPlot("gauge", data)
+}
