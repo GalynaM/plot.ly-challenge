@@ -11,6 +11,9 @@
 
 ### index.html
 * main page for Bellybutton Biodiversity Dashboard
-* 
+
 ### app.js
 * JavaScript file to create interactive functionality - draw Bar Chart, Bubble Chart, Gauge Chart, show Metadata for selected Individual from loaded JSON dataset
+
+#### Link to the project
+* https://galynam.github.io/plot.ly-challenge/
